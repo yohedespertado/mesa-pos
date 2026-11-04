@@ -39,7 +39,11 @@ const server = http.createServer(async (req, res) => {
         })
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) return json(res, response.status, { message: result.message || 'Mercado Pago rechazó la impresión.', cause: result.cause });
+      if (!response.ok) return json(res, response.status, {
+        message: result.message || 'Mercado Pago rechazó la impresión.',
+        error: result.error || null,
+        cause: Array.isArray(result.cause) ? result.cause.map(item => ({ code: item.code, description: item.description })) : []
+      });
       return json(res, 200, { id: result.id, status: result.status });
     } catch (error) {
       return json(res, 400, { message: error.message || 'Solicitud inválida.' });

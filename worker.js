@@ -46,7 +46,11 @@ async function printOrder(request, env) {
       })
     });
     const result = await response.json().catch(() => ({}));
-    if (!response.ok) return json({ message: result.message || 'Mercado Pago rechazó la impresión.' }, response.status);
+    if (!response.ok) return json({
+      message: result.message || 'Mercado Pago rechazó la impresión.',
+      error: result.error || null,
+      cause: Array.isArray(result.cause) ? result.cause.map(item => ({ code: item.code, description: item.description })) : []
+    }, response.status);
     return json({ id: result.id, status: result.status });
   } catch {
     return json({ message: 'No se pudo conectar con Mercado Pago.' }, 502);
