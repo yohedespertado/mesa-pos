@@ -1,6 +1,6 @@
 MESA — PUNTO DE VENTA
 
-Incluye comandas por mesa, menú editable desde el archivo, registro local de ventas, cobro en efectivo con cálculo de cambio y registro de cobros con tarjeta en Point. También envía comandas a la impresora integrada del Point Smart 2.
+Incluye 4 mesas iniciales que puedes agregar o quitar y agregar personas a cada mesa para asignarles productos. La comanda de cocina agrupa los productos por persona, usa mayúsculas y no muestra precios. También incluye las categorías Tacos, Cocteles, Bebidas y Postres, registro local de ventas, cobro en efectivo con cálculo de cambio y registro manual de cobros con tarjeta en Point. Usa el logo de Capitán en la app y en el icono instalado. Imprime tickets previos al cobro con logo y productos desglosados en imagen. El ticket previo al cobro no registra ni confirma un pago.
 
 INICIO
 1. Instala Node.js 18 o superior en la computadora que ejecutará el punto de venta.
@@ -16,7 +16,9 @@ En Cloudflare, abre Workers & Pages > mesa-pos > Settings > Variables and Secret
 
 Al abrir el enlace HTTPS de tu Worker, Chrome de Android pedirá el usuario y contraseña de la app. Luego puedes elegir ⋮ > “Instalar aplicación” o “Agregar a pantalla principal”.
 
-El plan gratuito de Workers incluye una cuota diaria de solicitudes. Al superar el límite, las solicitudes fallan; no generan un cobro automático. El Access Token de Mercado Pago permanece en el Worker y nunca se envía al navegador.
+Para escoger la terminal sin copiar el ID a mano, abre ⚙ Terminal y pulsa “Buscar mis terminales”. La app obtiene la lista desde Mercado Pago usando el token privado del Worker y muestra el `id` exacto de producción. Selecciona tu Point Smart 2 y guarda.
+
+El plan gratuito de Workers incluye una cuota diaria de solicitudes. Al superar el límite, las solicitudes fallan; no generan un cobro automático. El Access Token de Mercado Pago permanece en el Worker y nunca se envía al navegador. Si Mercado Pago rechaza la impresión, la app muestra el estado HTTP y el detalle que devuelva su API. La impresión personalizada en Point Smart 2 puede requerir habilitación de Soporte.
 
 USO EN TABLET ANDROID
 La app puede instalarse desde Chrome como acceso de pantalla completa. Para usarla en la tablet, debe publicarse con HTTPS en un servidor accesible desde la tablet; localhost solo funciona en el equipo donde se ejecuta el servidor. En Chrome Android, abre la dirección segura de la app, toca el menú ⋮ y elige “Instalar aplicación” o “Agregar a pantalla principal”. La interfaz guarda comandas y ventas en el almacenamiento local del navegador de esa tablet.

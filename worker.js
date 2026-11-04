@@ -25,9 +25,12 @@ async function printOrder(request, env) {
   if (!env.MP_ACCESS_TOKEN) return json({ message: 'Falta configurar el token de Mercado Pago.' }, 503);
   let input;
   try { input = await request.json(); } catch { return json({ message: 'Solicitud inválida.' }, 400); }
-  const { terminalId, externalReference, content } = input || {};
+  const { terminalId, externalReference, content, subtype = 'custom' } = input || {};
   if (!terminalId || !content) return json({ message: 'Falta el ID de terminal o el contenido.' }, 400);
-  if (typeof content !== 'string' || content.length < 100 || content.length > 4096) return json({ message: 'El texto debe tener entre 100 y 4096 caracteres.' }, 400);
+  if (!['custom', 'image'].includes(subtype)) return json({ message: 'Tipo de impresión no válido.' }, 400);
+  if (typeof content !== 'string') return json({ message: 'El contenido de impresión no es válido.' }, 400);
+  if (subtype === 'custom' && (content.length < 100 || content.length > 4096)) return json({ message: 'El texto debe tener entre 100 y 4096 caracteres.' }, 400);
+  if (subtype === 'image' && (content.length > 4000000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(content))) return json({ message: 'La imagen debe enviarse en formato PNG codificado en Base64 y no superar 4 MB.' }, 400);
   const reference = String(externalReference || `CMD_${Date.now()}`).slice(0, 64);
   if (!/^[a-zA-Z0-9_-]+$/.test(reference)) return json({ message: 'Referencia de comanda inválida.' }, 400);
   try {
@@ -41,19 +44,35 @@ async function printOrder(request, env) {
       body: JSON.stringify({
         type: 'print',
         external_reference: reference,
-        config: { point: { terminal_id: terminalId, subtype: 'custom' } },
+        config: { point: { terminal_id: terminalId, subtype } },
         content
       })
     });
     const result = await response.json().catch(() => ({}));
     if (!response.ok) return json({
       message: result.message || 'Mercado Pago rechazó la impresión.',
+      apiStatus: response.status,
       error: result.error || null,
       cause: Array.isArray(result.cause) ? result.cause.map(item => ({ code: item.code, description: item.description })) : []
     }, response.status);
     return json({ id: result.id, status: result.status });
   } catch {
     return json({ message: 'No se pudo conectar con Mercado Pago.' }, 502);
+  }
+}
+
+async function listTerminals(env) {
+  if (!env.MP_ACCESS_TOKEN) return json({ message: 'Falta configurar el token de Mercado Pago.' }, 503);
+  try {
+    const response = await fetch('https://api.mercadopago.com/terminals/v1/list?limit=50', {
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) return json({ message: result.message || 'Mercado Pago no pudo listar las terminales.', apiStatus: response.status, error: result.error || null }, response.status);
+    const terminals = result?.data?.terminals || [];
+    return json({ terminals: terminals.map(item => ({ id: item.id, operating_mode: item.operating_mode })) });
+  } catch {
+    return json({ message: 'No se pudo conectar con la lista de terminales de Mercado Pago.' }, 502);
   }
 }
 
@@ -64,6 +83,7 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/api/print' && request.method === 'POST') return printOrder(request, env);
+    if (url.pathname === '/api/terminals' && request.method === 'GET') return listTerminals(env);
     if (url.pathname.startsWith('/api/')) return json({ message: 'Ruta no encontrada.' }, 404);
     return env.ASSETS.fetch(request);
   }
