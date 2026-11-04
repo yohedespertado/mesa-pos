@@ -30,7 +30,7 @@ async function printOrder(request, env) {
   if (!['custom', 'image'].includes(subtype)) return json({ message: 'Tipo de impresión no válido.' }, 400);
   if (typeof content !== 'string') return json({ message: 'El contenido de impresión no es válido.' }, 400);
   if (subtype === 'custom' && (content.length < 100 || content.length > 4096)) return json({ message: 'El texto debe tener entre 100 y 4096 caracteres.' }, 400);
-  if (subtype === 'image' && (content.length > 4000000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(content))) return json({ message: 'La imagen debe enviarse en formato PNG codificado en Base64 y no superar 4 MB.' }, 400);
+  if (subtype === 'image' && (content.length > 1000000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(content))) return json({ message: 'La imagen debe ser PNG o JPEG codificada en Base64 y no superar 1 MB.' }, 400);
   const reference = String(externalReference || `CMD_${Date.now()}`).slice(0, 64);
   if (!/^[a-zA-Z0-9_-]+$/.test(reference)) return json({ message: 'Referencia de comanda inválida.' }, 400);
   try {
