@@ -9,16 +9,14 @@ INICIO
 4. En Terminal, captura el ID de la terminal Point. Debe ser el identificador devuelto por la API de Mercado Pago.
 5. Abre una mesa, agrega artículos y elige Imprimir comanda. Para cerrar la cuenta, elige Cobrar pedido y selecciona efectivo o tarjeta.
 
-PUBLICAR GRATIS EN CLOUDFLARE PAGES + GITHUB
-1. En Cloudflare, crea un proyecto Pages conectado a tu repositorio privado de GitHub.
-2. En la configuración del proyecto usa framework “None”, build command `exit 0` y output directory `.`. La carpeta functions debe permanecer en el nivel principal del repositorio.
-3. En Workers & Pages > tu proyecto > Settings > Variables and Secrets, añade MP_ACCESS_TOKEN, POS_USER y POS_PASSWORD como secretos cifrados para el entorno Production. No los agregues a GitHub.
-4. Vuelve a desplegar el proyecto.
-5. Abre el enlace HTTPS terminado en pages.dev en Chrome de Android e instala la app desde ⋮ > “Instalar aplicación” o “Agregar a pantalla principal”.
+PUBLICAR EN CLOUDFLARE WORKERS + GITHUB
+Tu repositorio ya está conectado a un Worker llamado mesa-pos. Sube wrangler.jsonc y worker.js al nivel principal del repositorio, junto con .assetsignore. El comando de despliegue existente `npx wrangler deploy` usará esa configuración.
 
-La app pedirá usuario y contraseña al abrirse. Usa un usuario y contraseña con letras y números básicos. Cloudflare Pages ofrece un plan gratuito con límite diario de solicitudes para las funciones; cada impresión usa una solicitud. La cuenta puede pedir pasos de verificación según el país.
+En Cloudflare, abre Workers & Pages > mesa-pos > Settings > Variables and Secrets. Añade MP_ACCESS_TOKEN, POS_USER y POS_PASSWORD como secretos. No los agregues a GitHub. Guarda los cambios y despliega una versión nueva.
 
-La integración de impresión está en functions/api/print.js y la autenticación de la app en functions/_middleware.js. El Access Token de Mercado Pago nunca se envía al navegador.
+Al abrir el enlace HTTPS de tu Worker, Chrome de Android pedirá el usuario y contraseña de la app. Luego puedes elegir ⋮ > “Instalar aplicación” o “Agregar a pantalla principal”.
+
+El plan gratuito de Workers incluye una cuota diaria de solicitudes. Al superar el límite, las solicitudes fallan; no generan un cobro automático. El Access Token de Mercado Pago permanece en el Worker y nunca se envía al navegador.
 
 USO EN TABLET ANDROID
 La app puede instalarse desde Chrome como acceso de pantalla completa. Para usarla en la tablet, debe publicarse con HTTPS en un servidor accesible desde la tablet; localhost solo funciona en el equipo donde se ejecuta el servidor. En Chrome Android, abre la dirección segura de la app, toca el menú ⋮ y elige “Instalar aplicación” o “Agregar a pantalla principal”. La interfaz guarda comandas y ventas en el almacenamiento local del navegador de esa tablet.
