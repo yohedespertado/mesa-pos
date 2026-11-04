@@ -76,6 +76,21 @@ async function listTerminals(env) {
   }
 }
 
+async function getPrintAction(actionId, env) {
+  if (!env.MP_ACCESS_TOKEN) return json({ message: 'Falta configurar el token de Mercado Pago.' }, 503);
+  if (!/^[a-zA-Z0-9_-]{1,100}$/.test(actionId)) return json({ message: 'ID de impresión no válido.' }, 400);
+  try {
+    const response = await fetch(`https://api.mercadopago.com/terminals/v1/actions/${encodeURIComponent(actionId)}`, {
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) return json({ message: result.message || 'No se pudo consultar el estado de la impresión.', apiStatus: response.status, error: result.error || null }, response.status);
+    return json({ id: result.id, status: result.status });
+  } catch {
+    return json({ message: 'No se pudo consultar el estado de la impresión.' }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (!env.POS_USER || !env.POS_PASSWORD) return json({ message: 'Falta configurar usuario y contraseña de la app.' }, 503);
@@ -84,6 +99,8 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === '/api/print' && request.method === 'POST') return printOrder(request, env);
     if (url.pathname === '/api/terminals' && request.method === 'GET') return listTerminals(env);
+    const actionMatch = url.pathname.match(/^\/api\/actions\/([^/]+)$/);
+    if (actionMatch && request.method === 'GET') return getPrintAction(decodeURIComponent(actionMatch[1]), env);
     if (url.pathname.startsWith('/api/')) return json({ message: 'Ruta no encontrada.' }, 404);
     return env.ASSETS.fetch(request);
   }
