@@ -1,0 +1,29 @@
+MESA — PUNTO DE VENTA
+
+Incluye comandas por mesa, menú editable desde el archivo, registro local de ventas, cobro en efectivo con cálculo de cambio y registro de cobros con tarjeta en Point. También envía comandas a la impresora integrada del Point Smart 2.
+
+INICIO
+1. Instala Node.js 18 o superior en la computadora que ejecutará el punto de venta.
+2. En esta carpeta, configura MP_ACCESS_TOKEN, POS_USER y POS_PASSWORD como variables de entorno del servidor. Usa el token privado de una aplicación de Mercado Pago y crea un usuario y contraseña para la app; nunca los coloques en index.html ni los compartas públicamente.
+3. Ejecuta `npm start` y abre http://localhost:3000 en el navegador.
+4. En Terminal, captura el ID de la terminal Point. Debe ser el identificador devuelto por la API de Mercado Pago.
+5. Abre una mesa, agrega artículos y elige Imprimir comanda. Para cerrar la cuenta, elige Cobrar pedido y selecciona efectivo o tarjeta.
+
+PUBLICAR GRATIS EN CLOUDFLARE PAGES + GITHUB
+1. En Cloudflare, crea un proyecto Pages conectado a tu repositorio privado de GitHub.
+2. En la configuración del proyecto usa framework “None”, build command `exit 0` y output directory `.`. La carpeta functions debe permanecer en el nivel principal del repositorio.
+3. En Workers & Pages > tu proyecto > Settings > Variables and Secrets, añade MP_ACCESS_TOKEN, POS_USER y POS_PASSWORD como secretos cifrados para el entorno Production. No los agregues a GitHub.
+4. Vuelve a desplegar el proyecto.
+5. Abre el enlace HTTPS terminado en pages.dev en Chrome de Android e instala la app desde ⋮ > “Instalar aplicación” o “Agregar a pantalla principal”.
+
+La app pedirá usuario y contraseña al abrirse. Usa un usuario y contraseña con letras y números básicos. Cloudflare Pages ofrece un plan gratuito con límite diario de solicitudes para las funciones; cada impresión usa una solicitud. La cuenta puede pedir pasos de verificación según el país.
+
+La integración de impresión está en functions/api/print.js y la autenticación de la app en functions/_middleware.js. El Access Token de Mercado Pago nunca se envía al navegador.
+
+USO EN TABLET ANDROID
+La app puede instalarse desde Chrome como acceso de pantalla completa. Para usarla en la tablet, debe publicarse con HTTPS en un servidor accesible desde la tablet; localhost solo funciona en el equipo donde se ejecuta el servidor. En Chrome Android, abre la dirección segura de la app, toca el menú ⋮ y elige “Instalar aplicación” o “Agregar a pantalla principal”. La interfaz guarda comandas y ventas en el almacenamiento local del navegador de esa tablet.
+
+REQUISITO DEL POINT
+Mercado Pago indica que las impresiones personalizadas del Point Smart 1/2 requieren solicitar a Soporte la actualización/habilitación del dispositivo. El ticket estándar de pago se imprime desde el flujo de pago de Mercado Pago. Esta app solo envía comandas personalizadas; no procesa pagos con tarjeta.
+
+La integración llama desde el servidor a POST https://api.mercadopago.com/terminals/v1/actions, con subtipo custom. El pago con tarjeta se cobra en el Point y luego se registra en la app; la conexión automática de pagos aún no está activada. Mantén el servidor y el token en un entorno privado y protegido antes de publicar el sistema en internet.

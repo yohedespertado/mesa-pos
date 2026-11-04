@@ -1,0 +1,8 @@
+{
+  "name": "mesa-pos",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Punto de venta para restaurante con comandas e impresión Mercado Pago Point Smart 2",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
