@@ -91,6 +91,52 @@ async function getPrintAction(actionId, env) {
   }
 }
 
+async function emailSale(request, env) {
+  if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_SECRET) {
+    return json({ message: 'Falta configurar el correo de ventas en Cloudflare.' }, 503);
+  }
+  let sale;
+  try { sale = await request.json(); } catch { return json({ message: 'Venta inválida.' }, 400); }
+  if (!sale || typeof sale.name !== 'string' || !Array.isArray(sale.items) || !Number.isFinite(Number(sale.total))) {
+    return json({ message: 'Los datos de la venta no son válidos.' }, 400);
+  }
+  const items = sale.items.slice(0, 100).map(item => ({
+    qty: Math.max(0, Number(item.qty) || 0),
+    name: String(item.name || '').slice(0, 120),
+    price: Math.max(0, Number(item.price) || 0)
+  }));
+  const details = items.map(item => `${item.qty} x ${item.name} — $${(item.qty * item.price).toFixed(2)}`).join('\n');
+  const lines = [
+    'VENTA REGISTRADA — CAPITÁN', '',
+    `Mesa: ${sale.name.slice(0, 80)}`,
+    `Fecha: ${String(sale.date || new Date().toLocaleString('es-MX')).slice(0, 100)}`,
+    `Forma de pago: ${String(sale.method || 'No indicada').slice(0, 40)}`,
+    '', 'Productos:', details || '(sin productos)', '',
+    `Total: $${Number(sale.total).toFixed(2)}`
+  ];
+  if (sale.method === 'Efectivo') {
+    lines.push(`Recibido: $${(Number(sale.cashReceived) || 0).toFixed(2)}`);
+    lines.push(`Cambio: $${(Number(sale.change) || 0).toFixed(2)}`);
+  }
+  try {
+    const response = await fetch(env.GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: env.GOOGLE_SCRIPT_SECRET,
+        to: 'yohedespertado@gmail.com',
+        subject: `Venta ${sale.name.slice(0, 80)} · $${Number(sale.total).toFixed(2)}`,
+        text: lines.join('\n')
+      })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || result.success !== true) return json({ message: result.message || 'No se pudo enviar el correo de la venta.' }, 502);
+    return json({ sent: true, id: result.id });
+  } catch {
+    return json({ message: 'No se pudo conectar con el servicio de correo.' }, 502);
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (!env.POS_USER || !env.POS_PASSWORD) return json({ message: 'Falta configurar usuario y contraseña de la app.' }, 503);
@@ -98,6 +144,7 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/api/print' && request.method === 'POST') return printOrder(request, env);
+    if (url.pathname === '/api/sales/email' && request.method === 'POST') return emailSale(request, env);
     if (url.pathname === '/api/terminals' && request.method === 'GET') return listTerminals(env);
     const actionMatch = url.pathname.match(/^\/api\/actions\/([^/]+)$/);
     if (actionMatch && request.method === 'GET') return getPrintAction(decodeURIComponent(actionMatch[1]), env);

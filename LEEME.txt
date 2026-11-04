@@ -14,6 +14,16 @@ Tu repositorio ya está conectado a un Worker llamado mesa-pos. Sube wrangler.js
 
 En Cloudflare, abre Workers & Pages > mesa-pos > Settings > Variables and Secrets. Añade MP_ACCESS_TOKEN, POS_USER y POS_PASSWORD como secretos. No los agregues a GitHub. Guarda los cambios y despliega una versión nueva.
 
+
+ENVÍO AUTOMÁTICO DE VENTAS POR CORREO (SIN COMPRAR DOMINIO)
+Las ventas se guardan en la tablet y también pueden enviarse a yohedespertado@gmail.com usando tu propia cuenta de Google Apps Script y Gmail. La cuenta personal de Google tiene una cuota de 100 destinatarios al día, sujeta a cambios.
+1. Abre https://script.google.com y crea un proyecto nuevo.
+2. Copia el contenido de `email-relay.gs` en el archivo Code.gs y guarda.
+3. En Configuración del proyecto > Propiedades del script, agrega `POS_EMAIL_SECRET` con una contraseña larga que inventes. Guárdala para usarla también en Cloudflare.
+4. Ejecuta `authorizeEmail` desde el editor y acepta los permisos de Google.
+5. Pulsa Implementar > Nueva implementación > Aplicación web. Ejecutar como: Yo. Quién tiene acceso: Cualquier persona. Implementa y copia la URL terminada en `/exec`.
+6. En Cloudflare > Workers & Pages > mesa-pos > Settings > Variables and Secrets, agrega como secretos `GOOGLE_SCRIPT_URL` (la URL `/exec`) y `GOOGLE_SCRIPT_SECRET` (el mismo valor que guardaste como `POS_EMAIL_SECRET`). Guarda y despliega una nueva versión.
+La URL de Apps Script puede ser pública, pero la función solo envía correos si recibe la clave secreta correcta. No publiques esa clave en GitHub. Si falla el correo, la venta queda guardada localmente y la app muestra un aviso. No envía ventas antiguas, solo cada venta nueva que registres después de configurarlo.
 Al abrir el enlace HTTPS de tu Worker, Chrome de Android pedirá el usuario y contraseña de la app. Luego puedes elegir ⋮ > “Instalar aplicación” o “Agregar a pantalla principal”.
 
 Para escoger la terminal sin copiar el ID a mano, abre ⚙ Terminal y pulsa “Buscar mis terminales”. La app obtiene la lista desde Mercado Pago usando el token privado del Worker y muestra el `id` exacto de producción. Selecciona tu Point Smart 2 y guarda.
