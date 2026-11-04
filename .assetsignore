@@ -1,0 +1,10 @@
+worker.js
+wrangler.jsonc
+.assetsignore
+.gitignore
+server.js
+package.json
+LEEME.txt
+functions/**
+node_modules/**
+mesa-pos-cloudflare.zip
