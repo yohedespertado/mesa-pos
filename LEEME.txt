@@ -1,6 +1,6 @@
 MESA — PUNTO DE VENTA
 
-Incluye 4 mesas iniciales que puedes agregar o quitar y agregar personas a cada mesa para asignarles productos. El menú muestra contadores por persona y botones +/− para ajustar cantidades. La comanda de cocina agrupa los productos por persona, usa mayúsculas y no muestra precios. También incluye las categorías Tacos, Cocteles, Bebidas y Postres, registro local de ventas, cobro en efectivo con cálculo de cambio y registro manual de cobros con tarjeta en Point. Usa el logo de Capitán en la app y en el icono instalado. El ticket de cobro imprime primero el logo como imagen JPEG pequeña y después imprime el detalle, total, IVA y promoción como texto.
+Incluye 4 mesas fijas y 3 pedidos independientes para llevar (Pedido 1, Pedido 2 y Pedido 3). Cada mesa y pedido admite varias personas para asignar productos. El menú muestra contadores por persona y botones +/− para ajustar cantidades. La comanda de cocina agrupa los productos por persona, usa mayúsculas y no muestra precios. También incluye las categorías Tacos, Cocteles, Bebidas y Postres, registro local de ventas, cobro en efectivo con cálculo de cambio y registro manual de cobros con tarjeta en Point. Usa el logo de Capitán en la app y en el icono instalado. El ticket de cobro imprime primero el logo como imagen JPEG pequeña y después imprime el detalle, total, IVA y promoción como texto.
 
 INICIO
 1. Instala Node.js 18 o superior en la computadora que ejecutará el punto de venta.
