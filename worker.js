@@ -91,6 +91,48 @@ async function getPrintAction(actionId, env) {
   }
 }
 
+async function createPointOrder(request, env) {
+  if (!env.MP_ACCESS_TOKEN) return json({ message: 'Falta configurar el token de Mercado Pago.' }, 503);
+  let input;
+  try { input = await request.json(); } catch { return json({ message: 'Solicitud de cobro inválida.' }, 400); }
+  const terminalId = String(input?.terminalId || '');
+  const amount = Number(input?.amount);
+  if (!terminalId || !Number.isFinite(amount) || amount <= 0) return json({ message: 'Falta la terminal o el monto válido.' }, 400);
+  const externalReference = `POS_${crypto.randomUUID().replaceAll('-', '')}`;
+const idempotencyKey = String(input.idempotencyKey || '');
+  if (!/^[A-Za-z0-9_-]{16,80}$/.test(idempotencyKey)) return json({ message: 'Clave de cobro no válida.' }, 400);
+  try {
+    const response = await fetch('https://api.mercadopago.com/v1/orders', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': idempotencyKey },
+      body: JSON.stringify({
+        type: 'point',
+        external_reference: externalReference,
+        expiration_time: 'PT5M',
+        transactions: { payments: [{ amount: amount.toFixed(2) }] },
+        config: { point: { terminal_id: terminalId, print_on_terminal: 'no_ticket' } },
+        description: String(input.description || 'Venta Capitán POS').slice(0, 150)
+      })
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) return json({ message: result.message || 'Mercado Pago no pudo iniciar el cobro.', apiStatus: response.status, error: result.error || null, cause: Array.isArray(result.cause) ? result.cause.map(x => ({ code: x.code, description: x.description })) : [] }, response.status);
+    return json({ id: result.id, status: result.status, status_detail: result.status_detail, external_reference: externalReference });
+  } catch { return json({ message: 'No se pudo conectar con Mercado Pago para iniciar el cobro.' }, 502); }
+}
+
+async function getPointOrder(orderId, env) {
+  if (!env.MP_ACCESS_TOKEN) return json({ message: 'Falta configurar el token de Mercado Pago.' }, 503);
+  if (!/^[A-Za-z0-9_-]{1,80}$/.test(orderId)) return json({ message: 'ID de cobro no válido.' }, 400);
+  try {
+    const response = await fetch(`https://api.mercadopago.com/v1/orders/${encodeURIComponent(orderId)}`, {
+      headers: { Authorization: `Bearer ${env.MP_ACCESS_TOKEN}`, 'Content-Type': 'application/json' }
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) return json({ message: result.message || 'No se pudo consultar el cobro.', apiStatus: response.status, error: result.error || null }, response.status);
+    const payment = result?.transactions?.payments?.[0] || {};
+    return json({ id: result.id, status: result.status, status_detail: result.status_detail, payment_status: payment.status || '', payment_status_detail: payment.status_detail || '' });
+  } catch { return json({ message: 'No se pudo consultar el estado del cobro.' }, 502); }
+}
 async function emailSale(request, env) {
   if (!env.GOOGLE_SCRIPT_URL || !env.GOOGLE_SCRIPT_SECRET) {
     return json({ message: 'Falta configurar el correo de ventas en Cloudflare.' }, 503);
@@ -144,6 +186,9 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/api/print' && request.method === 'POST') return printOrder(request, env);
+    if (url.pathname === '/api/point/orders' && request.method === 'POST') return createPointOrder(request, env);
+    const pointOrderMatch = url.pathname.match(/^\/api\/point\/orders\/([^/]+)$/);
+    if (pointOrderMatch && request.method === 'GET') return getPointOrder(decodeURIComponent(pointOrderMatch[1]), env);
     if (url.pathname === '/api/sales/email' && request.method === 'POST') return emailSale(request, env);
     if (url.pathname === '/api/terminals' && request.method === 'GET') return listTerminals(env);
     const actionMatch = url.pathname.match(/^\/api\/actions\/([^/]+)$/);
