@@ -1,4 +1,4 @@
-const CACHE = 'mesa-pos-v24';
+const CACHE = 'mesa-pos-v25';
 const APP_FILES = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/capitan-logo.jpg', '/capitan-icon-512.jpg', '/capitan-print-logo.jpg'];
 
 self.addEventListener('install', event => {
