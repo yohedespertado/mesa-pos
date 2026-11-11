@@ -1,5 +1,5 @@
-const CACHE = 'mesa-pos-v25';
-const APP_FILES = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/capitan-logo.jpg', '/capitan-icon-512.jpg', '/capitan-print-logo.jpg'];
+const CACHE = 'mesa-pos-v27';
+const APP_FILES = ['/', '/index.html', '/manifest.webmanifest', '/icon.svg', '/capitan-logo.jpg', '/capitan-icon-512.jpg', '/capitan-print-logo.jpg', '/qr-bbva.jpeg'];
 
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(APP_FILES)));
